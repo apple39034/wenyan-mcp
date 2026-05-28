@@ -2,6 +2,14 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { LIST_THEMES_SCHEMA, REGISTER_THEME_SCHEMA, REMOVE_THEME_SCHEMA } from "./theme.js";
 import { PUBLISH_ARTICLE_SCHEMA, publishArticle } from "./publish.js";
+import {
+    UPDATE_ARTICLE_SCHEMA,
+    updateArticle,
+    REPLACE_ARTICLE_IMAGE_SCHEMA,
+    replaceArticleImage,
+    REPLACE_ARTICLE_COVER_SCHEMA,
+    replaceArticleCover,
+} from "./draftEdit.js";
 import pkg from "../package.json" with { type: "json" };
 import { buildMcpResponse, globalStates } from "./utils.js";
 import { addTheme, listThemes, removeTheme } from "@wenyan-md/core/wrapper";
@@ -31,7 +39,15 @@ export function createServer(): Server {
      */
     server.setRequestHandler(ListToolsRequestSchema, async () => {
         return {
-            tools: [PUBLISH_ARTICLE_SCHEMA, LIST_THEMES_SCHEMA, REGISTER_THEME_SCHEMA, REMOVE_THEME_SCHEMA],
+            tools: [
+                PUBLISH_ARTICLE_SCHEMA,
+                UPDATE_ARTICLE_SCHEMA,
+                REPLACE_ARTICLE_IMAGE_SCHEMA,
+                REPLACE_ARTICLE_COVER_SCHEMA,
+                LIST_THEMES_SCHEMA,
+                REGISTER_THEME_SCHEMA,
+                REMOVE_THEME_SCHEMA,
+            ],
         };
     });
 
@@ -52,6 +68,12 @@ export function createServer(): Server {
                 const themeId = String(args.theme_id || "");
                 const appId = String(args.app_id || "");
                 return await publishArticle(contentUrl, file, content, themeId, appId, pkg.version);
+            } else if (request.params.name === "update_article") {
+                return await updateArticle(request.params.arguments || {});
+            } else if (request.params.name === "replace_article_image") {
+                return await replaceArticleImage(request.params.arguments || {});
+            } else if (request.params.name === "replace_article_cover") {
+                return await replaceArticleCover(request.params.arguments || {});
             } else if (request.params.name === "list_themes") {
                 const themes = await listThemes();
                 const builtinThemes = themes.filter((theme) => theme.isBuiltin);
